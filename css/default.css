@@ -1,0 +1,30 @@
+.fakeLink {
+    text-decoration: underline;
+    color:           #2E458A;
+}
+
+.fakeLink:hover {
+    text-decoration: none;
+    cursor:          pointer;
+}
+
+body {
+    font-family: "Helvetica Neue",Helvetica,sans-serif;
+    margin: 1em auto 4em;
+    width: 1000px;
+}
+
+h1 {
+    font-size: 64px;
+    font-weight: 300;
+    letter-spacing: -2px;
+    margin: 0.3em 0 0.1em;
+}
+
+h2 {
+    margin-top: 2em;
+}
+
+h1, h2 {
+    text-rendering: optimizelegibility;
+}

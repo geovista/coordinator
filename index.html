@@ -1,0 +1,659 @@
+<html>
+    <head>
+        <title>Coordination demo</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+        <!-- Style files -->
+        <link type="text/css" href="css/tomorrow.css" rel="stylesheet" />
+        <link type="text/css" href="css/default.css" rel="stylesheet" />
+
+        <!-- Third-party scripts -->
+        <script type='text/javascript' src='libraries/jquery-2.0.3.min.js'></script>
+        <script type='text/javascript' src='libraries/d3.v3.min.js'></script>
+        <script type='text/javascript' src='libraries/log4javascript-1.4.6.js'></script>
+        <script type='text/javascript' src='libraries/highlight.custom.js'></script>
+        
+        <!-- GeoVISTA scripts -->
+        <script type='text/javascript' src='libraries/util.js'></script>
+        <script type='text/javascript' src='libraries/coordinator.js'></script>
+        <script type='text/javascript' src='libraries/eventGate.js'></script>
+        <script type='text/javascript' src='libraries/networkGate.js'></script>
+
+        <!-- Main JS file -->
+        <script type='text/javascript' src='demo.js'></script>
+
+
+        <!-- Initialization script -->
+        <script>
+
+            $(document).ready(function() {
+
+                var blockSize       = 100,
+                    blockPadding    = Math.round(blockSize / 5),
+                    blockColors     = [
+                        "FBB4AE",   // red
+                        "B3CDE3",   // blue
+                        "CCEBC5",   // green
+                        "DECBE4",   // purple
+                        "FED9A6",   // orange
+                        "FFFFCC"    // yellow
+                    ],
+                    numBlocks       = blockColors.length,
+                    blockId         = 0,
+                    newBlock,
+                    i;
+
+                var sketchPadding   = 20,
+                    sketchWidth     = (blockSize + blockPadding) * numBlocks + sketchPadding * 2,
+                    sketchHeight    = blockSize + sketchPadding * 2;
+
+
+
+                //
+                // Build highlight blocks
+                //
+
+                var highlightBlocks = [];
+
+                for (i = 0; i < numBlocks; i++) {
+
+                    newBlock = buildHighlightBlock(blockSize, blockPadding, blockColors[i], i, blockId);
+
+                    highlightBlocks.push(newBlock);
+                    coordinator.signUp(newBlock);
+
+                    blockId++;
+                }
+
+                // D3 sketch                
+
+                var sketchCanvas = d3.select("#canvas1")
+                    .attr("width", sketchWidth)
+                    .attr("height", sketchHeight)
+                    .append("g")
+                        .attr("transform", "translate(" + sketchPadding + "," + sketchPadding + ")");
+
+                sketchCanvas.selectAll(".highlightBlocks")
+                    .data(highlightBlocks)
+                        .enter()
+                            .append("g")
+                                .attr("id", function (d, i) { return d.id; })   // used to later append highlight markers
+                                .append("rect")
+                                    .attr("x", function (d, i) { return d.x; })
+                                    .attr("width", function (d, i) { return d.size; })
+                                    .attr("height", function (d, i) { return d.size; })
+                                    .style("fill", function (d, i) { return "#" + d.color; })
+                                    .on("mouseover", function (d, i) { d.triggerHighlight(true) })
+                                    .on("mouseout", function (d, i) { d.triggerHighlight(false) })
+                                    .append("title")
+                                        .text(function(d, i) { return "#" + d.color; });
+
+
+
+
+                //
+                // Build first round of highlight-filter blocks
+                //
+
+                var highlightFilterBlocks1 = [];
+
+                for (i = 0; i < numBlocks; i++) {
+
+                    newBlock = buildHighlightFilterBlock(blockSize, blockPadding, blockColors[i], i, blockId);
+
+                    highlightFilterBlocks1.push(newBlock);
+                    coordinator.signUp(newBlock);
+
+                    blockId++;
+                }
+
+                // D3 sketch
+
+                var sketchCanvas2 = d3.select("#canvas2")
+                    .attr("width", sketchWidth)
+                    .attr("height", sketchHeight)
+                    .append("g")
+                        .attr("transform", "translate(" + sketchPadding + "," + sketchPadding + ")");
+
+                sketchCanvas2.selectAll(".highlightFilterBlocks1")
+                    .data(highlightFilterBlocks1)
+                        .enter()
+                            .append("g")
+                                .attr("id", function (d, i) { return d.id; })   // used to later append highlight markers
+                                .append("rect")
+                                    .attr("x", function (d, i) { return d.x; })
+                                    .attr("width", function (d, i) { return d.size; })
+                                    .attr("height", function (d, i) { return d.size; })
+                                    .style("fill", function (d, i) { return "#" + d.color; })
+                                    .on("mouseover", function (d, i) { d.triggerHighlight(true) })
+                                    .on("mouseout", function (d, i) { d.triggerHighlight(false) })
+                                    .on("mousedown", function (d, i) { d.triggerFilter(true) })
+                                    .on("mouseup", function (d, i) { d.triggerFilter(false) })
+                                    .append("title")
+                                        .text(function(d, i) { return "#" + d.color; });
+
+
+
+
+                //
+                // Build second round of highlight-filter blocks
+                //
+
+                var highlightFilterBlocks2 = [];
+
+                for (i = 0; i < numBlocks; i++) {
+
+                    newBlock = buildHighlightFilterBlock(blockSize, blockPadding, blockColors[i], i, blockId);
+
+                    highlightFilterBlocks2.push(newBlock);
+                    coordinator.signUp(newBlock);
+
+                    blockId++;
+                }
+
+                // D3 sketch
+
+                var sketchCanvas3 = d3.select("#canvas3")
+                    .attr("width", sketchWidth)
+                    .attr("height", sketchHeight)
+                    .append("g")
+                        .attr("transform", "translate(" + sketchPadding + "," + sketchPadding + ")");
+
+                sketchCanvas3.selectAll(".highlightFilterBlocks2")
+                    .data(highlightFilterBlocks2)
+                        .enter()
+                            .append("g")
+                                .attr("id", function (d, i) { return d.id; })   // used to later append highlight markers
+                                .append("rect")
+                                    .attr("x", function (d, i) { return d.x; })
+                                    .attr("width", function (d, i) { return d.size; })
+                                    .attr("height", function (d, i) { return d.size; })
+                                    .style("fill", function (d, i) { return "#" + d.color; })
+                                    .on("mouseover", function (d, i) { d.triggerHighlight(true) })
+                                    .on("mouseout", function (d, i) { d.triggerHighlight(false) })
+                                    .on("mousedown", function (d, i) { d.triggerFilter(true) })
+                                    .on("mouseup", function (d, i) { d.triggerFilter(false) })
+                                    .append("title")
+                                        .text(function(d, i) { return "#" + d.color; });
+
+
+
+                //
+                // Build third round of highlight-filter blocks
+                //
+
+                var highlightFilterBlocks3 = [];
+
+                for (i = 0; i < numBlocks; i++) {
+
+                    newBlock = buildHighlightFilterBlock(blockSize, blockPadding, blockColors[i], i, blockId);
+
+                    highlightFilterBlocks3.push(newBlock);
+                    coordinator.signUp(newBlock);
+
+                    blockId++;
+                }
+
+                // D3 sketch
+
+                var sketchCanvas3 = d3.select("#canvas4")
+                    .attr("width", sketchWidth)
+                    .attr("height", sketchHeight)
+                    .append("g")
+                        .attr("transform", "translate(" + sketchPadding + "," + sketchPadding + ")");
+
+                sketchCanvas3.selectAll(".highlightFilterBlocks3")
+                    .data(highlightFilterBlocks3)
+                        .enter()
+                            .append("g")
+                                .attr("id", function (d, i) { return d.id; })   // used to later append highlight markers
+                                .append("rect")
+                                    .attr("x", function (d, i) { return d.x; })
+                                    .attr("width", function (d, i) { return d.size; })
+                                    .attr("height", function (d, i) { return d.size; })
+                                    .style("fill", function (d, i) { return "#" + d.color; })
+                                    .on("mouseover", function (d, i) { d.triggerHighlight(true) })
+                                    .on("mouseout", function (d, i) { d.triggerHighlight(false) })
+                                    .on("mousedown", function (d, i) { d.triggerFilter(true) })
+                                    .on("mouseup", function (d, i) { d.triggerFilter(false) })
+                                    .append("title")
+                                        .text(function(d, i) { return "#" + d.color; });
+
+
+
+
+
+                //
+                // Build fourth round of highlight-filter blocks
+                //
+
+                var highlightFilterBlocks4 = [];
+
+                for (i = 0; i < numBlocks; i++) {
+
+                    newBlock = buildHighlightFilterBlock(blockSize, blockPadding, blockColors[i], i, blockId);
+
+                    highlightFilterBlocks4.push(newBlock);
+                    coordinator.signUp(newBlock);
+
+                    blockId++;
+                }
+
+                // D3 sketch
+
+                var sketchCanvas3 = d3.select("#canvas5")
+                    .attr("width", sketchWidth)
+                    .attr("height", sketchHeight)
+                    .append("g")
+                        .attr("transform", "translate(" + sketchPadding + "," + sketchPadding + ")");
+
+                sketchCanvas3.selectAll(".highlightFilterBlocks4")
+                    .data(highlightFilterBlocks4)
+                        .enter()
+                            .append("g")
+                                .attr("id", function (d, i) { return d.id; })   // used to later append highlight markers
+                                .append("rect")
+                                    .attr("x", function (d, i) { return d.x; })
+                                    .attr("width", function (d, i) { return d.size; })
+                                    .attr("height", function (d, i) { return d.size; })
+                                    .style("fill", function (d, i) { return "#" + d.color; })
+                                    .on("mouseover", function (d, i) { d.triggerHighlight(true) })
+                                    .on("mouseout", function (d, i) { d.triggerHighlight(false) })
+                                    .on("mousedown", function (d, i) { d.triggerFilter(true) })
+                                    .on("mouseup", function (d, i) { d.triggerFilter(false) })
+                                    .append("title")
+                                        .text(function(d, i) { return "#" + d.color; });
+
+
+
+
+
+                // Initialize local event gate
+                popupController.eventGate = eventGateWidget();
+                coordinator.signUp(popupController.eventGate);
+
+                // Initialize network gate
+                coordinator.signUp(networkGate.init("10.216.3.165", 80));
+
+                // Do this last
+                coordinator.linkComponents();
+
+                // Highlight code snippets
+                hljs.initHighlightingOnLoad();
+
+            });
+
+        </script>
+    </head>
+    
+
+
+
+
+
+    <!-- ************************************************** -->
+    <body>
+
+        <h2>Adding Coordinator.js to your project</h2>
+
+        <p>Coordinator.js is a self-contained JavaScript library. It only exports one variable into the global namespace (namely, <code>coordinator</code>). The following statement is sufficient to add Coordinator.js to your project, and will be used throughout this demo:
+
+<pre><code>    &lt;!-- Imported scripts --&gt;
+    &lt;script type='text/javascript' src='libraries/coordinator.js'&gt;&lt;/script&gt;
+</code></pre>
+
+        <h2>Building blocks of this demo</h2>
+
+        <p>This demo is supposed to demonstrate coordination of user interactions across multiple objects. The objects in this part of the demo are represented by geometric shapes (rectangles) of different color. These shapes will coordinate both the mode of user interaction ("highlight" event triggered by mouse hover and "filter" event triggered by mouse click) and the identity of the affected shape (namely, its color).
+
+        <p>Color blocks used in this example are SVG rectangles built using D3.js. Under the hood, each of the blocks is represented by a JavaScript object. These objects are constructed in bulk using functions that look like the one below:
+
+<pre><code>    function buildBlock (...) {
+
+        var block = {};
+
+        // Block initialization
+        // ...
+
+        return block;
+    }
+</code></pre>
+
+        <h2>Demo 1: Coordination of "highlight" events</h2>
+
+        <p>This is the example of the most basic use of the coordination mechanism. First, a range of color blocks are built and marked for participating in the coordination framework in the following fashion:
+
+<pre><code>
+    var newBlock = buildBlock(...);
+    coordinator.signUp(newBlock);
+</code></pre>
+
+        <p>Calling <code>signUp</code> method of the <code>coordinator</code> object is the way individual objects let coordinator know they would like to exchange events as part of the coordination process. Each of the objects has to have the following methods and properties built in:
+
+<pre><code>    function buildBlock (...) {
+
+        var block = {};
+
+        // Block initialization
+        // ...
+
+
+        // Logic for handling an incoming "highlight" event.
+        block.onHighlight = function (event) {
+
+            // Only necessary if "highlight" is listed as one
+            // of the event types being listened to in the 
+            // coordination metadata property below.
+        };
+
+
+        // Generic logic for emitting an event.
+        block.triggerEvent = coordinator.triggerEvent.bind(block);
+
+        // Shortcut for emitting a "highlight" event
+        block.triggerHighlight = function (flag) {
+            block.triggerEvent("highlight", block.color, flag);
+        };
+
+
+        // Coordination metadata
+        block.coordinationMetadata = {
+
+            // This section is used by Coordinator.js to 
+            // determine which components should be linked
+            // together.
+                
+            listensTo: {
+                "highlight": block.onHighlight
+            },
+
+            triggers: {
+                "highlight": {}
+            }
+
+        };
+
+        return block;
+    }
+</code></pre>
+
+        <p>Once all blocks have been built and the last call to <code>signUp</code> method is done, <code>coordinator</code> object can be asked to link the color blocks together based on their coordination metadata property. This is done once per application and involves the following command:
+
+<pre><code>    coordinator.linkComponents();
+</code></pre>
+
+        <p>As mentioned above, color blocks are visualized using D3. An array of colored blocks called <code>colorBlocks</code> is passed to D3, and the following code is executed:
+
+<pre><code>    svgCanvas.selectAll(".colorBlocks")
+        .data(colorBlocks)
+            .enter()
+                .append("g")
+                    .append("rect")
+                        // Link DOM listeners to event triggers on individual color blocks:
+                        .on("mouseover", function (d, i) { d.triggerHighlight(true) })
+                        .on("mouseout",  function (d, i) { d.triggerHighlight(false)})
+                        // Visual attributes of color blocks can be now set:
+                        // ...
+</code></pre>
+
+        <p>D3 code can be ran either before or after the coordination mechanism set up, order is unimportant. Once all of the above is done, the following result can be seen:
+
+        <div><svg id="canvas1"></svg></div>
+
+        <p>Each of the blocks above responds to mouse hover and broadcasts a message outlining that fact to all other objects in its group. They respond by showing a small rectangular marker that has the same color as the affected block.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <h2>Demo 2: Coordination of "filter" events</h2>
+
+        <p>This example follows the previous one closely, but adds a second type of event (namely, "filter"). Objects can be made to work with richers sets of event types by having more elaborate coordination metadata:
+
+<pre><code>    function buildBlock (...) {
+
+        var block = {};
+
+        // Block initialization
+        // ...
+
+
+        // Logic for handling an incoming "highlight" event.
+        block.onHighlight = function (event) {
+
+            // Only necessary if "highlight" is listed as one
+            // of the event types being listened to in the 
+            // coordination metadata property below.
+        };
+
+        // Logic for handling an incoming "filter" event.
+        block.onFilter = function (event) {
+            
+            // Only necessary if "filter" is listed as one
+            // of the event types being listened to in the 
+            // coordination metadata property below.
+        };
+
+
+        // Generic logic for emitting an event.
+        block.triggerEvent = coordinator.triggerEvent.bind(block);
+
+        // Shortcut for emitting a "highlight" event.
+        block.triggerHighlight = function (flag) {
+            block.triggerEvent("highlight", block.color, flag);
+        };
+
+        // Shortcut for emitting a "filter" event.
+        block.triggerFilter = function (flag) {
+            block.triggerEvent("filter", block.color, flag)
+        };
+
+
+        // Coordination metadata
+        block.coordinationMetadata = {
+
+            // This section is used by Coordinator.js to 
+            // determine which components should be linked
+            // together.
+                
+            listensTo: {
+                "highlight": block.onHighlight,
+                "filter": block.onFilter
+            },
+
+            triggers: {
+                "highlight": {},
+                "filter": {}
+            }
+
+        };
+
+        return block;
+    }
+</code></pre>
+
+        <p>Blocks used in this example are built, passed to the <code>signUp</code> method, linked by calling the <code>linkComponents</code> method of the <code>coordinator</code> object, and drawn using D3 in the same way as in the previous example. Once all of it is done, the following result can be seen:
+
+        <div><svg id="canvas2"></svg></div>
+        <div><svg id="canvas3"></svg></div>
+
+        <p>Each of the blocks above responds to mouse hover and broadcasts a message outlining that fact to all other objects in its group, just like in the example above. This time, however, it is possible to click on the block. This event will also be broadcast to all other objects in this group, and they will respond by disappearing, unless they are of the same color as the block that was clicked.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <h2>Demo 3: Coordination of events across multiple related browser windows</h2>
+
+        <p>This example demonstrates the use of an <code>eventGate</code>, a metacomponent that can be built on top of Coordinator.js. Event gates are small, self-contained JavaScript components that encapsulate the messaging logic that is used to communicate between a browser window and a pop-up it has summoned. Although pop-up windows have a way to talk to their parents, they do not have direct access to the JavaScript code that is ran in them, and thus cannot participate in the coordination framework directly. Event gates solve this problem by collecting the Coordinator.js events in their respective window, marshalling them to other windows using browser-specific cross-window communication mechanisms, and re-broadcasting events they receive from other event gates.
+
+        <p>Event gates are implemented using a different object-creation pattern than the one used above in order to showcase the flexibility of Coordinator.js. A snippet of code describing how event gates are built is shown below:
+
+<pre><code>    function EventGate() {
+
+        // Constructor
+        // ...
+        
+        // Event coordination
+        
+        this.onHighlight = this.onHighlight.bind(this);
+        this.onFilter    = this.onFilter.bind(this);
+        
+        this.coordinationMetadata = {
+
+            // This section is used by Coordinator.js to 
+            // determine which components should be linked
+            // together.
+
+            listensTo: {
+                "highlight": block.onHighlight,
+                "filter": block.onFilter
+            },
+
+            triggers: {
+                "highlight": {},
+                "filter": {}
+            }
+
+        };
+
+        // Generic logic for emitting an event.
+        this.triggerEvent = coordinator.triggerEvent.bind(this);
+        
+        // Shortcut for emitting a "highlight" event.
+        this.triggerHighlight = function(objectId, flag) {
+            this.triggerEvent("highlight", objectId, flag);
+        };
+        
+        // Shortcut for emitting a "filter" event.
+        this.triggerFilter = function(objectId, flag) {
+            this.triggerEvent("filter", objectId, flag);
+        };
+    }
+
+    // Logic for handling an incoming "highlight" event.
+    EventGate.prototype.onHighlight = function (event) {
+
+        // Only necessary if "highlight" is listed as one
+        // of the event types being listened to in the 
+        // coordination metadata property above.
+    };
+
+    // Logic for handling an incoming "filter" event.
+    EventGate.prototype.onFilter = function (event) {
+
+        // Only necessary if "highlight" is listed as one
+        // of the event types being listened to in the 
+        // coordination metadata property above.
+    };
+</code></pre>
+
+        <p>For the regular user, however, none of this is necessary. Event gates are added to the user application using the following command:
+
+<pre><code>    // Initialize local event gate
+    coordinator.signUp(new EventGate());
+</code></pre>
+
+        <p>Once all of the above is done, a pop-up can be summoned that will interact with the rest of the application. Click <span class="fakeLink" onclick="popupController.spawnPopup();">here</span> to spawn a pop-up, play around with the colored blocks it contains, and watch how they affect the colored blocks in the SVG sketch below.
+
+        <div><svg id="canvas4"></svg></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <h2>Demo 4: Coordination of events across network and unrelated browser windows</h2>
+
+        <p>This example demonstrates the use of an <code>networkGate</code>, another metacomponent built on top of Coordinator.js. Network gates are small, self-contained JavaScript components that encapsulate the messaging logic that is used to communicate between a browser window and a server. This specific example is using WebSockets as the means of communication. Network gates allow the coordination framework to span across networks, platforms, and sandboxed browser instances. Network gates achieve this problem by collecting the Coordinator.js events in their respective windows, marshalling them to an intermediary WebSocket server set up in a cooperating location, and re-broadcasting events they receive from the said server.
+
+        <p>A snippet of code describing how event gates are built is shown below:
+
+<pre><code>    var networkGate = {};
+
+    // Logic for handling an incoming "highlight" event.
+    networkGate.onHighlight = function (event) {
+
+        // Only necessary if "highlight" is listed as one
+        // of the event types being listened to in the 
+        // coordination metadata property below.
+    };
+
+    // Logic for handling an incoming "filter" event.
+    networkGate.onFilter = function (event) {
+
+        // Only necessary if "filter" is listed as one
+        // of the event types being listened to in the 
+        // coordination metadata property below.
+    };
+
+    networkGate.coordinationMetadata = {
+
+        // This section is used by Coordinator.js to 
+        // determine which components should be linked
+        // together.
+            
+        listeners: {
+            "highlight": networkGate.onHighlight,
+            "filter": networkGate.onFilter
+        },
+
+        triggers: {
+            "highlight": {},
+            "filter":    {}
+        }
+
+    };
+
+    // Generic logic for emitting an event.
+    networkGate.triggerEvent = coordinator.triggerEvent.bind(networkGate);
+
+    // Networking functionality is added to the networkGate object below
+    // ...
+</code></pre>
+
+        <p>Similar to the event gate, none of this is necessary for the regular user. Network gates are added to the user application using the following command:
+
+<pre><code>    // Initialize network gate
+    coordinator.signUp(networkGate.init("000.000.000.000", 80));
+</code></pre>
+
+        <p>Using a new browser window, a new tab, or a different computer altogether, open <a class="fakeLink" href="websocketClient.html" target="_blank">this link</a>. Play around with the colored blocks it contains, and watch how they affect the colored blocks in the SVG sketch below. This example requires the intermediary WebSocket server to be set up.
+
+        <div><svg id="canvas5"></svg></div>
+
+        <p>This concludes the first part of this demo.
+
+    </body>
+</html>

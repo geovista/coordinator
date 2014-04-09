@@ -1,0 +1,112 @@
+<html>
+    <head>
+        <title>Coordinated pop-up</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+        <!-- Style files -->
+        <link type="text/css" href="css/default.css" rel="stylesheet" />        
+        
+        <!-- Third-party imports -->
+        <script type='text/javascript' src='libraries/jquery-2.0.3.min.js'></script>
+        <script type='text/javascript' src='libraries/d3.v3.min.js'></script>
+        <script type='text/javascript' src='libraries/log4javascript-1.4.6.js'></script>
+        
+        <!-- GeoVISTA imports -->
+        <script type='text/javascript' src='libraries/util.js'></script>
+        <script type='text/javascript' src='libraries/coordinator.js'></script>
+        <script type='text/javascript' src='libraries/eventGate.js'></script>
+
+        <!-- Main JS file -->
+        <script type='text/javascript' src='demo.js'></script>
+
+        <!-- Move to CSS file -->
+        <style>
+        </style>
+
+        <script>
+
+            $(document).ready(function() {
+                
+                // Store pop-up info for later use
+                var windowName = window.name;
+                var windowOpener = window.opener;
+                
+                // Register eventGate with event coordinator
+                coordinator.signUp(eventGateWidget(windowOpener));    // This initializes the event gate as well.
+
+
+                //
+                // Build pop-up contents
+                //
+
+                var blockSize       = 100,
+                    blockPadding    = Math.round(blockSize / 5),
+                    blockColors     = [
+                        "FBB4AE",   // red
+                        "B3CDE3",   // blue
+                        "CCEBC5",   // green
+                        "DECBE4",   // purple
+                        "FED9A6",   // orange
+                        "FFFFCC"    // yellow
+                    ],
+                    numBlocks       = blockColors.length,
+                    blockId         = 0,
+                    newBlock,
+                    i;
+
+                var sketchPadding   = 20,
+                    sketchWidth     = (blockSize + blockPadding) * numBlocks + sketchPadding * 2,
+                    sketchHeight    = blockSize + sketchPadding * 2;
+
+                var highlightFilterBlocks1 = [];
+
+                for (i = 0; i < numBlocks; i++) {
+
+                    newBlock = buildHighlightFilterBlock(blockSize, blockPadding, blockColors[i], i, blockId);
+
+                    highlightFilterBlocks1.push(newBlock);
+                    coordinator.signUp(newBlock);
+
+                    blockId++;
+                }
+
+                // D3 sketch
+
+                var sketchCanvas2 = d3.select("body")
+                    .append("svg")
+                        .attr("width", sketchWidth)
+                        .attr("height", sketchHeight)
+                        .append("g")
+                            .attr("transform", "translate(" + sketchPadding + "," + sketchPadding + ")");
+
+                sketchCanvas2.selectAll(".highlightFilterBlocks1")
+                    .data(highlightFilterBlocks1)
+                        .enter()
+                            .append("g")
+                                .attr("id", function (d, i) { return d.id; })   // used to later append highlight markers
+                                .append("rect")
+                                    .attr("x", function (d, i) { return d.x; })
+                                    .attr("width", function (d, i) { return d.size; })
+                                    .attr("height", function (d, i) { return d.size; })
+                                    .style("fill", function (d, i) { return "#" + d.color; })
+                                    .on("mouseover", function (d, i) { d.triggerHighlight(true) })
+                                    .on("mouseout", function (d, i) { d.triggerHighlight(false) })
+                                    .on("mousedown", function (d, i) { d.triggerFilter(true) })
+                                    .on("mouseup", function (d, i) { d.triggerFilter(false) })
+                                    .append("title")
+                                        .text(function(d, i) { return "#" + d.color; });
+
+                // Do this last
+                coordinator.linkComponents();
+                
+            });
+
+        </script>
+        
+    </head>
+    
+    <body>
+        <p>Play around with the colored blocks in this pop-up (using mouse hover and clicks) and watch how they affect the colored blocks in the main application:
+    </body>
+</html>
+
