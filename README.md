@@ -3,7 +3,7 @@ coordinator.js
 
 *coordinator.js* is a JavaScript event coordination framework that follows the [introspective observer coordination pattern](http://dx.doi.org/10.1080/13658810903214203).
 
-A functional demo of the *coordinator.js* framework can be found at http://geovistapsu.github.io/coordinator/
+A functional demo of the *coordinator.js* framework can be found at http://geovista.github.io/coordinator/
 
 Description of the *coordinator.js* architecture can be found at http://dl.acm.org/citation.cfm?doid=2534931.2534948
 
