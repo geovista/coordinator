@@ -73,6 +73,8 @@ function buildHighlightFilterBlock (size, padding, color, idx, blockId) {
     //
 
     block.coordinationMetadata = {
+
+        URI: blockId,
             
         listeners: {
             "highlight": block.onHighlight,
@@ -147,6 +149,8 @@ function buildHighlightBlock (size, padding, color, idx, blockId) {
     //
 
     block.coordinationMetadata = {
+
+        URI: blockId,
             
         listeners: {
             "highlight": block.onHighlight
