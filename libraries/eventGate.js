@@ -10,15 +10,17 @@
 // Event gate widgets factory
 
 function eventGateWidget(targetWindow) {
-    
-    var eventGate = new EventGate();
-    
+
+    var eventGate = new EventGate(eventGateWidget.prototype.gateCounter++);
+
     if (targetWindow) {
         eventGate.registerTargetWindow(targetWindow);
     }
 
     return eventGate;
 }
+
+eventGateWidget.prototype.gateCounter = 0;
 
 //
 // End of wordcloud widgets factory
@@ -28,7 +30,7 @@ function eventGateWidget(targetWindow) {
 
 // Word cloud widget class
 
-function EventGate() {
+function EventGate(gateCounter) {
 
     // Public variables
     this.targetWindow = null;
@@ -36,45 +38,42 @@ function EventGate() {
     //
     // Constructor
     //
-    
+
     // Event coordination
-    
+
     this.onSelect = this.onSelect.bind(this);
     this.onHighlight = this.onHighlight.bind(this);
-    this.onFilter = this.onFilter.bind(this);
-    
-    this.coordinationMetadata = {
+    this.onUserProfileLocation = this.onUserProfileLocation.bind(this);
 
+    this.coordinationMetadata = {
         // This property is used by Coordinator to link components together.
         // The structure of this property must be replicated verbatim.
-
+        
+        // Component URI
+        URI: "eventGate" + gateCounter,
+    
         // Events this component would like to listens to
         listeners: {
-            "select":       this.onSelect,
-            "highlight":    this.onHighlight,
-            "filter":       this.onFilter 
+            "select": this.onSelect,
+            "highlight": this.onHighlight,
+            "userProfileLocation": this.onUserProfileLocation
         },
-
         // Events this component triggers and list of their subscribers (callbacks)
         triggers: {
-
             "select": {
                 // List of callbacks is populated by Coordinator.
             },
-
             "highlight": {
                 // List of callbacks is populated by Coordinator.
             },
-
-            "filter": {
-                // List of callbacks is populated by Coordinator.
+            "userProfileLocation": {
             }
         }
 
     };
 
     this.triggerEvent = coordinator.triggerEvent.bind(this);
-    
+
     this.triggerSelect = function(tweetIds, flag) {
         this.triggerEvent("select", tweetIds, flag);
     };
@@ -82,14 +81,36 @@ function EventGate() {
     this.triggerHighlight = function(tweetIds, flag) {
         this.triggerEvent("highlight", tweetIds, flag);
     };
-    
-    this.triggerFilter = function(tweetIds, flag) {
-        this.triggerEvent("filter", tweetIds, flag);
+
+    this.triggerDrawUserLocation = function(location, flag) {
+
+        // This is a generic method that specific triggers within components 
+        // should use to fire events.
+
+        // 'this' must be bound to the calling component before use.
+
+        var registeredCallbacks = this.coordinationMetadata.triggers["userProfileLocation"];
+
+        if (registeredCallbacks) {
+
+            var event = {
+                "type": "userProfileLocation", // event type, e.g. XXX, select, highlight, filter, etc.
+                "location": location, // IDs of the tweets affected by this event
+                "flag": flag        // direction of the action, e.g. select / deselect
+            };
+
+            var callbackFunction;
+
+            for (callbackFunction in registeredCallbacks) {
+                registeredCallbacks[callbackFunction](event);
+            }
+        }
+
     };
 
     // Bind event handlers to 'this'
     this.onPostMessage = this.onPostMessage.bind(this);
-    
+
     // Register a listener for postMessage events
     window.addEventListener("message", this.onPostMessage, false);
 
@@ -120,60 +141,61 @@ function EventGate() {
 // Event coordination
 //
 
-EventGate.prototype.onSelect = function (event) {
+EventGate.prototype.onSelect = function(event) {
 
     // This function marshalls the 'select' event from this window to other windows
-    
-    if(this.targetWindow) {
+
+    if (this.targetWindow) {
 
         var payload = {
-            type:   "eventGateMessage",
-            data:   event
+            type: "eventGateMessage",
+            data: event
         };
 
         this.targetWindow.postMessage(JSON.stringify(payload), "*");
     }
-    
+
 };
 
-EventGate.prototype.onHighlight = function (event) {
+EventGate.prototype.onHighlight = function(event) {
 
     // This function marshalls the 'highlight' event from this window to other windows
-    
-    if(this.targetWindow) {
-        
+
+    if (this.targetWindow) {
+
         var payload = {
-            type:   "eventGateMessage",
-            data:   event
+            type: "eventGateMessage",
+            data: event
         };
 
         this.targetWindow.postMessage(JSON.stringify(payload), "*");
     }
-    
+
 };
 
-EventGate.prototype.onFilter = function (event) {
+EventGate.prototype.onUserProfileLocation = function(event) {
 
-    // This function marshalls the 'filter' event from this window to other windows
-    
-    if(this.targetWindow) {
-        
+    // This function marshalls the 'highlight' event from this window to other windows
+
+    if (this.targetWindow) {
+
         var payload = {
-            type:   "eventGateMessage",
-            data:   event
+            type: "eventGateMessage",
+            data: event
         };
 
         this.targetWindow.postMessage(JSON.stringify(payload), "*");
     }
-    
+
 };
+
 
 //
 // Event handlers
 //
 
-EventGate.prototype.onPostMessage = function (postMessage) {
-    
+EventGate.prototype.onPostMessage = function(postMessage) {
+
     var payload = JSON.parse(postMessage.data);
 
     if (payload.type === "eventGateMessage") {
@@ -193,10 +215,9 @@ EventGate.prototype.onPostMessage = function (postMessage) {
             } else if (event.type === coordinator.eventTypes.highlight) {
 
                 this.triggerHighlight(event.tweetIds, event.flag);
+            } else if (event.type === coordinator.eventTypes.userProfileLocation) {
 
-            } else if (event.type === coordinator.eventTypes.filter) {
-
-                this.triggerFilter(event.tweetIds, event.flag);
+                this.triggerDrawUserLocation(event.location, event.flag);
             }
         }
     }
@@ -207,10 +228,10 @@ EventGate.prototype.onPostMessage = function (postMessage) {
 // Class methods
 //
 
-EventGate.prototype.registerTargetWindow = function (windowObject) {
+EventGate.prototype.registerTargetWindow = function(windowObject) {
 
     // Remember the window with which to communicate
     this.targetWindow = windowObject;
-    
+
     return this;
 }
