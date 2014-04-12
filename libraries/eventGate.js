@@ -43,9 +43,11 @@ function EventGate(gateCounter) {
 
     this.onSelect = this.onSelect.bind(this);
     this.onHighlight = this.onHighlight.bind(this);
+    this.onFilter = this.onFilter.bind(this);
     this.onUserProfileLocation = this.onUserProfileLocation.bind(this);
 
     this.coordinationMetadata = {
+        
         // This property is used by Coordinator to link components together.
         // The structure of this property must be replicated verbatim.
         
@@ -54,20 +56,28 @@ function EventGate(gateCounter) {
     
         // Events this component would like to listens to
         listeners: {
-            "select": this.onSelect,
-            "highlight": this.onHighlight,
-            "userProfileLocation": this.onUserProfileLocation
+            select:                 this.onSelect,
+            highlight:              this.onHighlight,
+            filter:                 this.onFilter,
+            userProfileLocation:    this.onUserProfileLocation
         },
+        
         // Events this component triggers and list of their subscribers (callbacks)
         triggers: {
-            "select": {
+            
+            select: {
                 // List of callbacks is populated by Coordinator.
             },
-            "highlight": {
+            
+            highlight: {
                 // List of callbacks is populated by Coordinator.
             },
-            "userProfileLocation": {
-            }
+            
+            filter: {
+                // List of callbacks is populated by Coordinator.
+            },
+            
+            userProfileLocation: { }
         }
 
     };
@@ -80,6 +90,10 @@ function EventGate(gateCounter) {
 
     this.triggerHighlight = function(tweetIds, flag) {
         this.triggerEvent("highlight", tweetIds, flag);
+    };
+    
+    this.triggerFilter = function(tweetIds, flag) {
+        this.triggerEvent("filter", tweetIds, flag);
     };
 
     this.triggerDrawUserLocation = function(location, flag) {
@@ -94,9 +108,9 @@ function EventGate(gateCounter) {
         if (registeredCallbacks) {
 
             var event = {
-                "type": "userProfileLocation", // event type, e.g. XXX, select, highlight, filter, etc.
-                "location": location, // IDs of the tweets affected by this event
-                "flag": flag        // direction of the action, e.g. select / deselect
+                type:       "userProfileLocation",  // event type, e.g. XXX, select, highlight, filter, etc.
+                location:   location,               // IDs of the tweets affected by this event
+                flag:       flag                    // direction of the action, e.g. select / deselect
             };
 
             var callbackFunction;
@@ -173,6 +187,22 @@ EventGate.prototype.onHighlight = function(event) {
 
 };
 
+EventGate.prototype.onFilter = function(event) {
+
+    // This function marshalls the 'highlight' event from this window to other windows
+
+    if (this.targetWindow) {
+
+        var payload = {
+            type: "eventGateMessage",
+            data: event
+        };
+
+        this.targetWindow.postMessage(JSON.stringify(payload), "*");
+    }
+
+};
+
 EventGate.prototype.onUserProfileLocation = function(event) {
 
     // This function marshalls the 'highlight' event from this window to other windows
@@ -215,6 +245,11 @@ EventGate.prototype.onPostMessage = function(postMessage) {
             } else if (event.type === coordinator.eventTypes.highlight) {
 
                 this.triggerHighlight(event.tweetIds, event.flag);
+                
+            } else if (event.type === coordinator.eventTypes.filter) {
+
+                this.triggerFilter(event.tweetIds, event.flag);
+                
             } else if (event.type === coordinator.eventTypes.userProfileLocation) {
 
                 this.triggerDrawUserLocation(event.location, event.flag);
